@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Search - Milestone 2</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            background-color: #f8d7da;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        form {
+            text-align: center;
+            margin: 20px 0;
+        }
+        input[type="text"], button {
+            font-family: 'Arial', sans-serif;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 60%;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+        }
+        .book-item {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .book-item:hover {
+            background-color: #f1f1f1;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        .book-item img {
+            margin-right: 20px;
+            border-radius: 4px;
+            width: 128px;
+            height: auto;
+        }
+        .book-item h3 {
+            margin: 0;
+            font-size: 1.7em;
+            color: #222;
+            font-family: 'Georgia', serif;
+        }
+        .book-item p {
+            margin: 5px 0;
+            font-size: 1em;
+            line-height: 1.5em;
+            font-family: 'Arial', sans-serif;
+        }
+        .book-item p strong {
+            color: #555;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #333;
+            color: white;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+        .back-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-top: 20px;
+            display: block;
+            width: fit-content;
+            transition: background-color 0.3s ease;
+        }
+        .back-link:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Book Search - Milestone 2</h1>
+</header>
+
+<form id="search-form">
+    <input type="text" id="search-query" placeholder="Enter a book title or keyword">
+    <button type="submit">Search</button>
+</form>
+
+<div id="paging-controls" style="text-align: center; margin-top: 20px;"></div>
+<div id="search-results"></div>
+
+<a href="../index.html" class="back-link">Back to Homepage</a>
+<a href="bookshelf.html" class="back-link">My Bookshelf</a>
+
+<script>
+    $(document).ready(function() {
+        let currentPage = 1;
+        const resultsPerPage = 10;
+        const maxResults = 60;
+
+        $('#search-form').on('submit', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            searchBooks();
+        });
+
+        function searchBooks() {
+            const query = $('#search-query').val();
+            const startIndex = (currentPage - 1) * resultsPerPage;
+            $('#current-page').text(`Page ${currentPage}`);
+
+            const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&startIndex=${startIndex}&maxResults=${resultsPerPage}&key=AIzaSyCTiR6XKslxdqU_Pb0GXd4mT-rC2Hckb6o`;
+
+            $.getJSON(url, function(data) {
+                let resultsHtml = '';
+
+                data.items.forEach(item => {
+                    const title = item.volumeInfo.title;
+                    const image = item.volumeInfo.imageLinks?.smallThumbnail || 'https://via.placeholder.com/128x192';
+                    const authors = item.volumeInfo.authors ? item.volumeInfo.authors.join(', ') : 'Unknown Author';
+                    const description = item.volumeInfo.description ? item.volumeInfo.description.substring(0, 150) + '...' : 'No description available';
+
+                    resultsHtml += `
+                        <div class="book-item">
+                            <img src="${image}" alt="${title}">
+                            <div>
+                                <h3><a href="details.html?id=${item.id}">${title}</a></h3>
+                                <p><strong>Author(s):</strong> ${authors}</p>
+                                <p><strong>Description:</strong> ${description}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                $('#search-results').html(resultsHtml);
+                updatePageControls(data.totalItems);
+            }).fail(function() {
+                $('#search-results').html('<p>Error loading data. </p>');
+            });
+        }
+
+        function updatePageControls(totalItems) {
+            let totalPages = Math.ceil(Math.min(totalItems, maxResults) / resultsPerPage);
+            let pageControlsHtml = `<label for="page-select">Select Page:</label> <select id="page-select">`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                pageControlsHtml += `<option value="${i}" ${i === currentPage ? 'selected' : ''}>${i}</option>`;
+            }
+            pageControlsHtml += `</select>`;
+
+            $('#paging-controls').html(pageControlsHtml);
+
+            $('#page-select').on('change', function() {
+                currentPage = parseInt($(this).val(), 10);
+                searchBooks();
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
