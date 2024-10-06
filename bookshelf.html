@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Bookshelf</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            background-color: #f8d7da; 
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+        }
+        .book-item {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .book-item:hover {
+            background-color: #f1f1f1;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        .book-item img {
+            margin-right: 20px;
+            border-radius: 4px;
+            width: 128px;
+            height: auto;
+        }
+        .book-item h3 {
+            margin: 0;
+            font-size: 1.7em;
+            color: #222;
+            font-family: 'Georgia', serif;
+        }
+        .book-item p {
+            margin: 5px 0;
+            font-size: 1em;
+            line-height: 1.5em;
+            font-family: 'Arial', sans-serif;
+        }
+        .book-item p strong {
+            color: #555;
+        }
+        .clear {
+            clear: both;
+        }
+        .back-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .back-link:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>My Favorite Books</h1>
+    </header>
+
+    <div class="container">
+        <div id="bookshelf"></div>
+        <div class="clear"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            const API_KEY = 'AIzaSyCTiR6XKslxdqU_Pb0GXd4mT-rC2Hckb6o';
+            const userId = '104105507821630379483';
+            const shelfId = 0;
+
+            const url = `https://www.googleapis.com/books/v1/users/${userId}/bookshelves/${shelfId}/volumes?key=${API_KEY}`;
+
+            $.getJSON(url, function(data) {
+                let booksHtml = '';
+
+                data.items.forEach(function(item) {
+                    const title = item.volumeInfo.title;
+                    const bookId = item.id;
+                    const authors = item.volumeInfo.authors ? item.volumeInfo.authors.join(', ') : 'Unknown Author';
+                    const image = item.volumeInfo.imageLinks ? item.volumeInfo.imageLinks.thumbnail : 'https://via.placeholder.com/128x192';
+                    const description = item.volumeInfo.description ? item.volumeInfo.description.substring(0, 150) + '...' : 'No description available';
+
+                    booksHtml += `
+                        <div class="book-item">
+                            <img src="${image}" alt="${title}">
+                            <div>
+                                <h3><a href="details.html?id=${bookId}">${title}</a></h3>
+                                <p><strong>Author(s):</strong> ${authors}</p>
+                                <p><strong>Description:</strong> ${description}</p>
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    `;
+                });
+
+                $('#bookshelf').html(booksHtml);
+            }).fail(function() {
+                $('#bookshelf').html('<p>Error loading bookshelf. Please try again later.</p>');
+            });
+        });
+    </script>
+
+</body>
+
+<a href="../index.html" class="back-link">Back to Homepage</a>
+<a href="m2index.html" class="back-link">Back to Search</a>
+
+</html>
